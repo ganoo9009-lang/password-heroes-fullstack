@@ -4,8 +4,8 @@ const cors = require("cors");
 const helmet = require("helmet");
 require("dotenv").config();
 
-// استيراد مودل المستخدم
-const User = require("./models/User"); 
+// --- التعديل هنا: استيراد المودل مباشرة من المجلد الرئيسي ---
+const User = require("./User"); 
 
 const app = express();
 
@@ -13,7 +13,6 @@ app.use(express.json());
 app.use(cors());
 app.use(helmet());
 
-// متغير حفظ حالة الصيانة (مهم يكون في الأعلى)
 let maintenanceActive = false;
 
 // --- Database Connection ---
@@ -26,7 +25,8 @@ mongoose
   });
 
 // --- Routes ---
-const authRoutes = require("./routes/authRoutes");
+// --- التعديل هنا: استيراد الراوتس مباشرة من المجلد الرئيسي ---
+const authRoutes = require("./authRoutes");
 app.use("/api/auth", authRoutes);
 
 // 1. مسار جلب كل المستخدمين
@@ -39,17 +39,15 @@ app.get('/api/users', async (req, res) => {
   }
 });
 
-// 2. مسار التعديل (الاسم + النقاط) - الآن صار حقيقي
-// ابحثي عن هذا المسار في server.js وعدليه ليكون هكذا:
+// 2. مسار التعديل
 app.put('/api/users/:id', async (req, res) => {
   try {
-    // التعديل هنا: أضفنا username لكي يستقبله السيرفر
     const { username, totalScore } = req.body; 
     const userId = req.params.id;
 
     const updatedUser = await User.findByIdAndUpdate(
       userId, 
-      { username, totalScore }, // تحديث الحقلين معاً في قاعدة البيانات
+      { username, totalScore },
       { returnDocument: 'after' }
     );
 
@@ -63,7 +61,7 @@ app.put('/api/users/:id', async (req, res) => {
   }
 });
 
-// 3. مسار الحذف (Delete) - أضفته لك عشان يشتغل الزر الأحمر
+// 3. مسار الحذف
 app.delete('/api/users/:id', async (req, res) => {
   try {
     const deletedUser = await User.findByIdAndDelete(req.params.id);
@@ -74,7 +72,7 @@ app.delete('/api/users/:id', async (req, res) => {
   }
 });
 
-// 4. مسارات وضع الصيانة (نقلتها فوق الـ listen عشان تشتغل)
+// 4. مسارات وضع الصيانة
 app.post('/api/maintenance', (req, res) => {
   maintenanceActive = req.body.status;
   console.log("🛠️ Maintenance Status Updated:", maintenanceActive);
@@ -82,7 +80,7 @@ app.post('/api/maintenance', (req, res) => {
 });
 
 app.get('/api/maintenance-status', (req, res) => {
-  res.json({ isMaintenanceMode: maintenanceActive }); // خليته isMaintenanceMode عشان يطابق الـ Frontend حقك
+  res.json({ isMaintenanceMode: maintenanceActive });
 });
 
 // --- الصفحة الرئيسية ---
@@ -90,13 +88,12 @@ app.get("/", (req, res) => {
   res.send("<h1 style='color: #8A2BE2; font-family: sans-serif;'>💜 Password Heroes API is Alive! 🔮</h1>");
 });
 
-// مسار 404
 app.use((req, res) => {
   res.status(404).json({ success: false, message: "🕵️ Path leads to nowhere!" });
 });
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`🚀 [Server]: Flying high on http://localhost:${PORT}`);
+  console.log(`🚀 [Server]: Flying high on port ${PORT}`);
   console.log(`✨ [Ready]: The Purple Hero Portal is open! 💜`);
 });
